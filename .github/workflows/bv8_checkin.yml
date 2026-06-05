@@ -1,11 +1,6 @@
 name: BV8 Daily Check-in
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/bv8_checkin.yml"
-      - "scripts/bv8_checkin.py"
   schedule:
     # UTC time. 16:10 UTC = 00:10 Asia/Shanghai next day.
     - cron: "10 16 * * *"
