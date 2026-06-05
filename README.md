@@ -58,6 +58,7 @@ Settings -> Secrets and variables -> Actions -> New repository secret
 - `BV8_TOTP_SECRET`：如果账号开启了 2FA，填认证器的 base32 密钥，脚本会自动生成 6 位 TOTP
 - `BV8_2FA_CODE`：手动运行时可临时填一次性验证码/备用码
 - `BV8_COOKIE`：仅作为备用，不推荐长期使用，因为会过期
+- `BV8_USER_ID`：仅在使用 `BV8_COOKIE` fallback 时可能需要；账号密码登录时脚本会自动从登录响应提取用户 ID 并设置 `New-Api-User` 请求头
 
 ## 运行时间
 

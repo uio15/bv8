@@ -18,6 +18,7 @@ Optional environment variables:
   BV8_TOTP_SECRET       optional TOTP base32 secret if your account requires 2FA
   BV8_2FA_CODE          one-time 2FA/backup code, mainly for manual runs
   BV8_COOKIE            fallback only; not recommended for long-term scheduling
+  BV8_USER_ID           optional user id header for BV8_COOKIE fallback
 """
 
 from __future__ import annotations
@@ -40,6 +41,7 @@ BASE_URL = os.getenv("BV8_BASE_URL", "https://api.bv8.my").rstrip("/")
 USERNAME = os.getenv("BV8_USERNAME", "").strip()
 PASSWORD = os.getenv("BV8_PASSWORD", "").strip()
 COOKIE = os.getenv("BV8_COOKIE", "").strip()
+USER_ID = os.getenv("BV8_USER_ID", "").strip()
 TURNSTILE_TOKEN = os.getenv("BV8_TURNSTILE_TOKEN", "").strip()
 TOTP_SECRET = os.getenv("BV8_TOTP_SECRET", "").strip()
 TWO_FA_CODE = os.getenv("BV8_2FA_CODE", "").strip()
@@ -65,6 +67,29 @@ def _request_json(session: requests.Session, method: str, path: str, **kwargs: A
         resp.raise_for_status()
 
     return data
+
+
+def _extract_user_id(data: Any) -> str:
+    """Frontend sends localStorage.user.id as the New-Api-User header."""
+    if not isinstance(data, dict):
+        return ""
+    for key in ("id", "user_id", "userId"):
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    nested = data.get("user")
+    if isinstance(nested, dict):
+        return _extract_user_id(nested)
+    return ""
+
+
+def _set_new_api_user(session: requests.Session, user_id: str, source: str) -> bool:
+    user_id = str(user_id or "").strip()
+    if not user_id:
+        return False
+    session.headers.update({"New-Api-User": user_id})
+    print(f"New-Api-User header set from {source}.")
+    return True
 
 
 def _totp_now(secret: str, digits: int = 6, period: int = 30) -> str:
@@ -100,6 +125,12 @@ def _login(session: requests.Session) -> None:
             print(_pretty({k: v for k, v in result_2fa.items() if k != "data"}))
             if not result_2fa.get("success"):
                 raise RuntimeError(f"2FA failed: {result_2fa.get('message') or result_2fa}")
+            data_2fa = result_2fa.get("data") or {}
+            if isinstance(data_2fa, dict) and data_2fa:
+                data = data_2fa
+
+        if not _set_new_api_user(session, _extract_user_id(data), "login response") and USER_ID:
+            _set_new_api_user(session, USER_ID, "BV8_USER_ID")
 
         # Cheap verification. Do not dump user data to logs.
         try:
@@ -112,6 +143,8 @@ def _login(session: requests.Session) -> None:
     if COOKIE:
         # Fallback mode only. Prefer username/password because cookies expire.
         session.headers.update({"Cookie": COOKIE})
+        if USER_ID:
+            _set_new_api_user(session, USER_ID, "BV8_USER_ID")
         print("Using BV8_COOKIE fallback auth. Prefer BV8_USERNAME/BV8_PASSWORD for scheduled runs.")
         return
 

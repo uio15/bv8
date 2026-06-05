@@ -9,6 +9,8 @@ on:
 jobs:
   checkin:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,6 +31,7 @@ jobs:
           BV8_TOTP_SECRET: ${{ secrets.BV8_TOTP_SECRET }}
           # Optional fallback only; not recommended for long-term scheduling:
           BV8_COOKIE: ${{ secrets.BV8_COOKIE }}
+          BV8_USER_ID: ${{ secrets.BV8_USER_ID }}
           BV8_BASE_URL: https://api.bv8.my
           BV8_QUOTA_PER_DOLLAR: "500000"
         run: python scripts/bv8_checkin.py
