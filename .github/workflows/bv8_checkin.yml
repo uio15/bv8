@@ -1,0 +1,34 @@
+name: BV8 Daily Check-in
+
+on:
+  schedule:
+    # UTC time. 16:10 UTC = 00:10 Asia/Shanghai next day.
+    - cron: "10 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade requests
+
+      - name: Run BV8 check-in
+        env:
+          BV8_USERNAME: ${{ secrets.BV8_USERNAME }}
+          BV8_PASSWORD: ${{ secrets.BV8_PASSWORD }}
+          # Optional, only if your account has 2FA enabled:
+          BV8_TOTP_SECRET: ${{ secrets.BV8_TOTP_SECRET }}
+          # Optional fallback only; not recommended for long-term scheduling:
+          BV8_COOKIE: ${{ secrets.BV8_COOKIE }}
+          BV8_BASE_URL: https://api.bv8.my
+          BV8_QUOTA_PER_DOLLAR: "500000"
+        run: python scripts/bv8_checkin.py
