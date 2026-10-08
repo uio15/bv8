@@ -124,10 +124,14 @@ def main():
         print(json.dumps(res, ensure_ascii=False, indent=2))
     elif cmd == "raw":
         print(json.dumps(rpc(sys.argv[2], json.loads(sys.argv[3]) if len(sys.argv) > 3 else None), ensure_ascii=False, indent=2))
-    else:  # call <tool> [json]
-        args = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
+    else:  # call <tool> [json | @jsonfile]
+        arg = sys.argv[3] if len(sys.argv) > 3 else '{}'
+        if arg.startswith('@'):
+            with open(arg[1:], encoding='utf-8') as fh:
+                arg = fh.read()
+        args = json.loads(arg)
         timeout = int(os.environ.get("MCP_TIMEOUT", "180"))
-        res = call(sys.argv[2] if cmd != "call" else sys.argv[2], args, timeout=timeout)
+        res = call(sys.argv[2], args, timeout=timeout)
         print(json.dumps(res, ensure_ascii=False, indent=2))
 
 
