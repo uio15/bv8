@@ -123,6 +123,9 @@ class Bridge:
         if params is not None:
             payload["params"] = params
         sid = self.state.get("session_id")
+        if not sid and method != "initialize" and _retry:
+            self.initialize()
+            return self.rpc(method, params, _retry=False)
         try:
             doc, new_sid = self._post(payload, sid)
         except RuntimeError as exc:
