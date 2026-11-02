@@ -68,3 +68,7 @@ workflow 默认每天 `16:10 UTC` 运行，即北京时间次日 `00:10` 左右�
 
 - 不要把账号、密码、Cookie、TOTP 密钥提交到代码。
 - 如果以后站点启用 Turnstile，人机验证 token 可能无法在 GitHub Actions 里纯脚本生成；届时需要换成可自动刷新 token 的方案，或继续使用 Cookie/浏览器自动化方案。
+
+## 本机桥接
+
+Windows 工作区 MCP 桥的接入方式、工具清单与操作规则见 [docs/mcp-bridge.md](docs/mcp-bridge.md)。
